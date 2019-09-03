@@ -19,6 +19,10 @@ const argv = require('yargs')
         alias: 'i',
         default: false
     })
+    .option('name', {
+        alias: 'n',
+        default: false
+    })
     .option('verbose', {
         alias: 'v',
         default: false
@@ -28,7 +32,8 @@ const source = argv.source;
 const destination = argv.destination;
 const info = argv.info;
 const verbose = argv.verbose;
-pack({ source, destination, info, verbose })
+const name = argv.name;
+pack({ source, destination, info, verbose, name })
     .then(() => process.exit(0))
     .catch(error => {
         console.error(error);

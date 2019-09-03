@@ -19,14 +19,15 @@ function zipFiles(files, filename, source, destination, info, verbose) {
     return archive.finalize();
 }
 
-function pack({ source, destination, info, verbose }) {
+function pack({ source, destination, info, verbose, name }) {
     source = source || './build';
+    name = name ? '.' + name : '';
     return packlist({
         path: source
     }).then(files => {
         return zipFiles(
             files,
-            `${sanitize(process.env.npm_package_name)}_${sanitize(process.env.npm_package_version)}.zip`,
+            `${sanitize(process.env.npm_package_name)}_${sanitize(process.env.npm_package_version)}${name}.zip`,
             source,
             destination,
             info,
