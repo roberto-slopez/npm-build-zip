@@ -10,9 +10,9 @@
     },
     "dependencies": {
         "archiver-promise": "^1.0.0",
-        "npm-packlist": "^1.1.10",
-        "sanitize-filename": "^1.6.1",
-        "yargs": "^13.2.4"
+        "npm-packlist": "^1.4.4",
+        "sanitize-filename": "^1.6.3",
+        "yargs": "^13.3.0"
     },
     "author": {
         "name": "Roberto SLopez",
