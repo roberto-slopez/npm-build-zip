@@ -15,6 +15,10 @@ const argv = require('yargs')
         alias: 'dst',
         default: ''
     })
+    .option('includes', {
+        alias: 'in',
+        default: ''
+    })
     .option('info', {
         alias: 'i',
         default: false
@@ -33,7 +37,10 @@ const destination = argv.destination;
 const info = argv.info;
 const verbose = argv.verbose;
 const name = argv.name;
-pack({ source, destination, info, verbose, name })
+const includes = argv.includes;
+
+console.log(includes);
+pack({ source, destination, info, verbose, name, includes })
     .then(() => process.exit(0))
     .catch(error => {
         console.error(error);

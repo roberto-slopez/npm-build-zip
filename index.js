@@ -19,11 +19,12 @@ function zipFiles(files, filename, source, destination, info, verbose) {
     return archive.finalize();
 }
 
-function pack({ source, destination, info, verbose, name }) {
+function pack({ source, destination, info, verbose, name, includes }) {
     source = source || './build';
     name = name ? '.' + name : '';
     return packlist({
-        path: source
+        path: source,
+        bundled: includes.split(',')
     }).then(files => {
         return zipFiles(
             files,
