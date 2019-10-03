@@ -39,7 +39,6 @@ const verbose = argv.verbose;
 const name = argv.name;
 const includes = argv.includes;
 
-console.log(includes);
 pack({ source, destination, info, verbose, name, includes })
     .then(() => process.exit(0))
     .catch(error => {
