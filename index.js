@@ -21,14 +21,14 @@ function zipFiles(files, filename, source, destination, info, verbose) {
 
 function pack({ source, destination, info, verbose, name, includes }) {
     source = source || './build';
-    name = name ? '.' + name : '';
+    name = name ? name : `${sanitize(process.env.npm_package_name)}_${sanitize(process.env.npm_package_version)}`;
     return packlist({
         path: source,
         bundled: includes.split(',')
     }).then(files => {
         return zipFiles(
             files,
-            `${sanitize(process.env.npm_package_name)}_${sanitize(process.env.npm_package_version)}${name}.zip`,
+            `${name}.zip`,
             source,
             destination,
             info,
