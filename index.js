@@ -4,6 +4,7 @@ const archiver = require('archiver-promise');
 const packlist = require('npm-packlist');
 const path = require('path');
 const sanitize = require('sanitize-filename');
+const packagejson = require(path.join(process.cwd(), "/package.json"));
 
 function zipFiles(files, filename, source, destination, info, verbose) {
     const target = path.join(destination, filename);
@@ -28,7 +29,7 @@ function pack({ source, destination, info, verbose, name, includes }) {
     }).then(files => {
         return zipFiles(
             files,
-            `${sanitize(process.env.npm_package_name)}_${sanitize(process.env.npm_package_version)}${name}.zip`,
+            `${sanitize(packagejson.name)}_${sanitize(packagejson.version)}${name}.zip`,
             source,
             destination,
             info,
