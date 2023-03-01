@@ -27,4 +27,6 @@ npm run zip
 
 `--name=demo` **default is: ''** extra name in package.zip
 
+`--name_only=true` **default is: false** when providing a name, omit package information from filename, does nothing without a name
+
 `--info=true` **default is: false** for show logs

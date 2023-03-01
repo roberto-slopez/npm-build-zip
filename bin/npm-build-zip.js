@@ -27,6 +27,10 @@ const argv = require('yargs')
         alias: 'n',
         default: false
     })
+    .option('name_only', {
+        alias: 'no',
+        default: false
+    })
     .option('verbose', {
         alias: 'v',
         default: false
@@ -38,8 +42,9 @@ const info = argv.info;
 const verbose = argv.verbose;
 const name = argv.name;
 const includes = argv.includes;
+const name_only = argv.name_only;
 
-pack({ source, destination, info, verbose, name, includes })
+pack({ source, destination, info, verbose, name, includes, name_only })
     .then(() => process.exit(0))
     .catch(error => {
         console.error(error);

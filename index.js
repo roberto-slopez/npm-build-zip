@@ -4,6 +4,7 @@ const archiver = require('archiver-promise');
 const packlist = require('npm-packlist');
 const path = require('path');
 const sanitize = require('sanitize-filename');
+const packagejson = require(path.join(process.cwd(), "/package.json"));
 
 function zipFiles(files, filename, source, destination, info, verbose) {
     const target = path.join(destination, filename);
@@ -19,16 +20,21 @@ function zipFiles(files, filename, source, destination, info, verbose) {
     return archive.finalize();
 }
 
-function pack({ source, destination, info, verbose, name, includes }) {
+function pack({ source, destination, info, verbose, name, includes, name_only }) {
     source = source || './build';
-    name = name ? '.' + name : '';
+    if (name && name_only) {
+        name = `${name}.zip`;
+    } else {
+        name = name ? '.' + name : '';
+        name = `${sanitize(packagejson.name)}_${sanitize(packagejson.version)}${name}.zip`;
+    }
     return packlist({
         path: source,
         bundled: includes.split(',')
     }).then(files => {
         return zipFiles(
             files,
-            `${sanitize(process.env.npm_package_name)}_${sanitize(process.env.npm_package_version)}${name}.zip`,
+            name,
             source,
             destination,
             info,
