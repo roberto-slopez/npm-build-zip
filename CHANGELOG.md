@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - `sanitize-filename` removed; `sanitize` inlined.
 - ESLint config updated for ESM (`sourceType: "module"`).
 - Test split: `unit.test.mjs` (ESM, imports `index.js` directly) and `cli.test.cjs` / `integration.test.cjs` / `cjs-shim.test.cjs` (CJS, invoke the bin via `child_process`).
+- CI matrix is now Node 22 only (was 18/20/22). The package's `engines.node` is `>=22`, so testing below that is meaningless and breaks on `fs.promises.glob` (`**` glob) and `--test` directory walking introduced after 18.
 
 ## [1.2.0] - 2026-06-24
 
