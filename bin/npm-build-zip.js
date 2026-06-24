@@ -39,11 +39,11 @@ function parseArgs(argv) {
             value = false;
         } else if (a.startsWith('--')) {
             const eq = a.indexOf('=');
+            key = a.slice(2, eq !== -1 ? eq : undefined);
+            key = ALIASES[key] || key;
             if (eq !== -1) {
-                key = a.slice(2, eq);
                 value = a.slice(eq + 1);
             } else {
-                key = a.slice(2);
                 const next = argv[i + 1];
                 if (next === undefined || next.startsWith('-')) {
                     value = true;

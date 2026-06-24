@@ -89,6 +89,57 @@ test('CLI --include_hidden accepts the flag and produces a zip', async () => {
     }
 });
 
+test('CLI long-form aliases --src and --dst are equivalent to --source/--destination', async () => {
+    const fs = require('node:fs');
+    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers.cjs');
+    const dir = makeTempDir();
+    try {
+        const buildDir = makeBuildFixture(dir);
+        makePackageJson(dir);
+        const result = await run(
+            ['--src', buildDir, '--dst', dir, '--name', 'aliased', '--name_only'],
+            { cwd: dir }
+        );
+        assert.equal(result.status, 0, `stderr: ${result.stderr}`);
+        assert.ok(fs.existsSync(`${dir}/aliased.zip`),
+            'expected aliased.zip via --src/--dst long-form aliases');
+    } finally {
+        cleanup(dir);
+    }
+});
+
+test('CLI --exclude removes matching files from the zip', async (t) => {
+    if (!(await (async () => {
+        try { const { execFile } = require('node:child_process'); const { promisify } = require('node:util');
+            await promisify(execFile)('unzip', ['-v']); return true; } catch { return false; }
+    })())) return t.skip('unzip not available');
+
+    const { execFile } = require('node:child_process');
+    const { promisify } = require('node:util');
+    const pExecFile = promisify(execFile);
+    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers.cjs');
+
+    const dir = makeTempDir();
+    try {
+        const buildDir = makeBuildFixture(dir, { withMap: true });
+        makePackageJson(dir);
+        const result = await run(
+            ['--source', buildDir, '--destination', dir,
+             '--name', 'pkg', '--name_only', '--include_hidden',
+             '--exclude=*.map'],
+            { cwd: dir }
+        );
+        assert.equal(result.status, 0, `stderr: ${result.stderr}`);
+        const { stdout } = await pExecFile('unzip', ['-Z1', `${dir}/pkg.zip`], { encoding: 'utf8' });
+        const entries = stdout.split('\n').map(s => s.trim()).filter(Boolean);
+        assert.ok(!entries.some(e => e.endsWith('.map')),
+            `expected no .map files; got: ${entries.join(', ')}`);
+        assert.ok(entries.includes('index.js'), 'expected index.js still present');
+    } finally {
+        cleanup(dir);
+    }
+});
+
 test('CLI --name_only without --name fails with a clear error and exit 1', async () => {
     const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers.cjs');
     const dir = makeTempDir();
