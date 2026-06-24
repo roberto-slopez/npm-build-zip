@@ -1,18 +1,24 @@
 {
     "name": "npm-build-zip",
-    "version": "1.0.4",
+    "version": "1.2.0",
     "repository": {
         "type": "git",
         "url": "https://github.com/roberto-slopez/npm-build-zip.git"
     },
+    "engines": {
+        "node": ">=18"
+    },
     "scripts": {
-        "test": "node bin/npm-build-zip.js"
+        "test": "node --test test/*.test.js",
+        "test:unit": "node --test test/unit.test.js",
+        "test:cli": "node --test test/cli.test.js",
+        "test:integration": "node --test test/integration.test.js"
     },
     "dependencies": {
         "archiver-promise": "1.0.0",
         "npm-packlist": "1.4.4",
         "sanitize-filename": "1.6.3",
-        "yargs": "13.3.0"
+        "yargs": "^17.7.2"
     },
     "author": {
         "name": "Roberto SLopez",
@@ -22,6 +28,13 @@
         "npm-build-zip": "bin/npm-build-zip.js"
     },
     "description": "`npm run zip` to generate a .zip archive file",
+    "type": "commonjs",
+    "files": [
+        "index.js",
+        "bin/",
+        "README.md",
+        "LICENSE"
+    ],
     "eslintConfig": {
         "env": {
             "es6": true,
@@ -29,7 +42,7 @@
         },
         "extends": "eslint:recommended",
         "parserOptions": {
-            "ecmaVersion": 6
+            "ecmaVersion": "latest"
         }
     },
     "keywords": [
