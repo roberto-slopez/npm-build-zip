@@ -1,18 +1,29 @@
 {
     "name": "npm-build-zip",
-    "version": "1.0.4",
+    "version": "2.0.0",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./index.js",
+            "require": "./index.cjs"
+        }
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/roberto-slopez/npm-build-zip.git"
     },
+    "engines": {
+        "node": ">=22"
+    },
     "scripts": {
-        "test": "node bin/npm-build-zip.js"
+        "test": "node --test \"test/*.test.{cjs,mjs}\"",
+        "test:unit": "node --test test/unit.test.mjs",
+        "test:cli": "node --test test/cli.test.cjs",
+        "test:integration": "node --test test/integration.test.cjs"
     },
     "dependencies": {
-        "archiver-promise": "1.0.0",
-        "npm-packlist": "1.4.4",
-        "sanitize-filename": "1.6.3",
-        "yargs": "13.3.0"
+        "archiver": "^7.0.1",
+        "npm-packlist": "^1.4.4"
     },
     "author": {
         "name": "Roberto SLopez",
@@ -21,7 +32,7 @@
     "bin": {
         "npm-build-zip": "bin/npm-build-zip.js"
     },
-    "description": "`npm run zip` to generate a .zip archive file",
+    "description": "`npm run zip` to generate a .zip archive file. Zero CLI deps.",
     "eslintConfig": {
         "env": {
             "es6": true,
@@ -29,7 +40,8 @@
         },
         "extends": "eslint:recommended",
         "parserOptions": {
-            "ecmaVersion": 6
+            "ecmaVersion": "latest",
+            "sourceType": "module"
         }
     },
     "keywords": [
@@ -39,7 +51,14 @@
         "zip"
     ],
     "license": "Apache-2.0",
-    "main": "index.js",
+    "main": "./index.js",
+    "files": [
+        "index.js",
+        "index.cjs",
+        "bin/",
+        "README.md",
+        "LICENSE"
+    ],
     "maintainers": [
         {
             "name": "Roberto SLopez",
