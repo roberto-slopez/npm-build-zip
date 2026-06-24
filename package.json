@@ -16,7 +16,7 @@
         "node": ">=22"
     },
     "scripts": {
-        "test": "node --test \"test/**/*.test.cjs\" \"test/**/*.test.mjs\"",
+        "test": "node --test test/unit.test.mjs test/cli.test.cjs test/integration.test.cjs test/cjs-shim.test.cjs",
         "test:unit": "node --test test/unit.test.mjs",
         "test:cli": "node --test test/cli.test.cjs",
         "test:integration": "node --test test/integration.test.cjs"
