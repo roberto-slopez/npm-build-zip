@@ -40,7 +40,7 @@ test('CLI without source dir fails with a clear error', async () => {
 
 test('CLI --name --name_only produces <name>.zip without needing package.json version', async () => {
     const fs = require('node:fs');
-    const { makeTempDir, makeBuildFixture, cleanup } = require('./helpers');
+    const { makeTempDir, makeBuildFixture, cleanup } = require('./helpers.cjs');
     const dir = makeTempDir();
     try {
         const buildDir = makeBuildFixture(dir);
@@ -57,7 +57,7 @@ test('CLI --name --name_only produces <name>.zip without needing package.json ve
 });
 
 test('CLI exits 0 on success and prints Archive: line when --info is set', async () => {
-    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers');
+    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers.cjs');
     const dir = makeTempDir();
     try {
         const buildDir = makeBuildFixture(dir);
@@ -74,7 +74,7 @@ test('CLI exits 0 on success and prints Archive: line when --info is set', async
 });
 
 test('CLI --include_hidden accepts the flag and produces a zip', async () => {
-    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers');
+    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers.cjs');
     const dir = makeTempDir();
     try {
         const buildDir = makeBuildFixture(dir, { withDotfile: true });
@@ -90,7 +90,7 @@ test('CLI --include_hidden accepts the flag and produces a zip', async () => {
 });
 
 test('CLI --name_only without --name fails with a clear error and exit 1', async () => {
-    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers');
+    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers.cjs');
     const dir = makeTempDir();
     try {
         const buildDir = makeBuildFixture(dir);
@@ -116,7 +116,7 @@ test('CLI --no-timestamp produces a zip with deterministic mtime', async (t) => 
     const { execFile } = require('node:child_process');
     const { promisify } = require('node:util');
     const pExecFile = promisify(execFile);
-    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers');
+    const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers.cjs');
 
     const dir = makeTempDir();
     try {

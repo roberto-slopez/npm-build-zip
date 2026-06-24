@@ -1,12 +1,12 @@
-'use strict';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
-
-const { _internal } = require('../index.js');
-const { makeTempDir, makeBuildFixture, makePackageJson, cleanup, withCwd } = require('./helpers');
+const require = createRequire(import.meta.url);
+const { _internal } = await import('../index.js');
+const { makeTempDir, makeBuildFixture, makePackageJson, cleanup, withCwd } = require('./helpers.cjs');
 
 const { walkAllFiles, resolveFilename, loadPackageJson } = _internal;
 

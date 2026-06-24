@@ -10,7 +10,7 @@ const fs = require('node:fs');
 const pExecFile = promisify(execFile);
 
 const BIN = path.join(__dirname, '..', 'bin', 'npm-build-zip.js');
-const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers');
+const { makeTempDir, makeBuildFixture, makePackageJson, cleanup } = require('./helpers.cjs');
 
 async function unzipAvailable() {
     try {

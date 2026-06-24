@@ -1,16 +1,14 @@
-'use strict';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
+import archiver from 'archiver';
+import packlist from 'npm-packlist';
 
-const archiver = require('archiver-promise');
-const packlist = require('npm-packlist');
-const fs = require('fs');
-const path = require('path');
-const sanitize = require('sanitize-filename');
-
-function loadPackageJson() {
+export function loadPackageJson(cwd = process.cwd()) {
     try {
-        return require(path.join(process.cwd(), 'package.json'));
+        return JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
     } catch (err) {
-        if (err.code === 'MODULE_NOT_FOUND') {
+        if (err.code === 'ENOENT') {
             throw new Error(
                 'Could not find a package.json in the current directory. ' +
                 'Run from your project root, or use --name and --name_only ' +
@@ -21,7 +19,7 @@ function loadPackageJson() {
     }
 }
 
-function walkAllFiles(dir) {
+export function walkAllFiles(dir) {
     const out = [];
     const stack = [dir];
     while (stack.length) {
@@ -38,33 +36,18 @@ function walkAllFiles(dir) {
     return out;
 }
 
-function zipFiles(files, filename, source, destination, info, verbose, timestamp) {
-    // Fix #15: ensure the destination directory exists before writing.
-    fs.mkdirSync(destination || '.', { recursive: true });
-
-    const target = path.join(destination, filename);
-    if (info) console.log(`Archive: ${target}`);
-
-    // For reproducible builds (--no-timestamp), force UTC, no comment, and
-    // a stable entry order. Without these, the same input produces different
-    // bytes on every run (OS-dependent mtime, OS-dependent readdir order).
-    const archiverOpts = timestamp ? undefined : { forceUTC: true, comment: '' };
-    const archive = archiver(target, archiverOpts);
-
-    // Sort entries to make byte output deterministic across platforms.
-    const sorted = timestamp ? files : [...files].sort((a, b) => a.localeCompare(b));
-
-    sorted.forEach(file => {
-        const filePath = path.join(source, file);
-        if (verbose) console.log(file);
-        const entryOpts = timestamp ? { name: file } : { name: file, date: new Date(0) };
-        archive.file(filePath, entryOpts);
-    });
-
-    return archive.finalize();
+// Sanitize a string so it can be safely used as a filename. Inlined from
+// sanitize-filename (MIT) to remove the dependency.
+export function sanitize(name) {
+    return String(name)
+        .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .trim() || 'unnamed';
 }
 
-function resolveFilename({ name, name_only }, pkg) {
+export function resolveFilename({ name, name_only }, pkg) {
     const pkgName = pkg && pkg.name;
     const pkgVersion = pkg && pkg.version;
 
@@ -87,38 +70,80 @@ function resolveFilename({ name, name_only }, pkg) {
     return `${sanitize(pkgName)}_${sanitize(pkgVersion)}${suffix}.zip`;
 }
 
-function pack({ source, destination, info, verbose, name, includes, name_only, include_hidden, timestamp }) {
-    source = source || './build';
+async function applyExcludes(files, patterns, cwd) {
+    if (!patterns || patterns.length === 0) return files;
+    const excludeSet = new Set();
+    for (const pattern of patterns) {
+        try {
+            for await (const match of fsp.glob(pattern, { cwd })) {
+                excludeSet.add(String(match).split(path.sep).join('/'));
+            }
+        } catch (err) {
+            throw new Error(`Invalid --exclude pattern "${pattern}": ${err.message}`);
+        }
+    }
+    return files.filter(f => !excludeSet.has(f));
+}
 
+function zipFiles(files, filename, source, destination, { info, verbose, timestamp }) {
+    fs.mkdirSync(destination || '.', { recursive: true });
+    const target = path.join(destination, filename);
+    if (info) console.log(`Archive: ${target}`);
+
+    const archiverOpts = timestamp ? {} : { forceUTC: true, comment: '' };
+    const archive = archiver.create('zip', archiverOpts);
+    const output = fs.createWriteStream(target);
+    archive.pipe(output);
+
+    const sorted = timestamp ? files : [...files].sort((a, b) => a.localeCompare(b));
+    for (const file of sorted) {
+        const filePath = path.join(source, file);
+        if (verbose) console.log(file);
+        const entryOpts = timestamp ? { name: file } : { name: file, date: new Date(0) };
+        archive.file(filePath, entryOpts);
+    }
+
+    return new Promise((resolve, reject) => {
+        output.on('close', () => resolve());
+        archive.on('error', reject);
+        archive.finalize().catch(reject);
+    });
+}
+
+export async function pack({
+    source = './build',
+    destination = '',
+    info = false,
+    verbose = false,
+    name = '',
+    includes = '',
+    name_only = false,
+    include_hidden = false,
+    timestamp = true,
+    exclude = ''
+}) {
     if (!fs.existsSync(source)) {
         throw new Error(`Source directory does not exist: ${source}`);
     }
 
-    // Only load package.json when we actually need name/version. When
-    // --name and --name_only are both set, the user opted out of package info.
+    // Only load package.json when we actually need name/version.
     const pkg = (name && name_only) ? null : loadPackageJson();
     const filename = resolveFilename({ name, name_only }, pkg);
 
-    // Resolve the file list. By default we use npm-packlist which honors
-    // .npmignore / .gitignore / package.json#files (matches `npm pack`).
-    // With --include-hidden / --all, we do a plain recursive walk and
-    // include every file (fixes #10).
-    const filesPromise = include_hidden
-        ? Promise.resolve(walkAllFiles(source))
-        : packlist({
+    let files = include_hidden
+        ? walkAllFiles(source)
+        : await packlist({
             path: source,
-            bundled: includes.split(',')
+            bundled: includes.split(',').filter(Boolean)
         });
 
-    return filesPromise.then(files => zipFiles(files, filename, source, destination, info, verbose, timestamp));
+    const excludePatterns = String(exclude).split(',').map(s => s.trim()).filter(Boolean);
+    if (excludePatterns.length) {
+        files = await applyExcludes(files, excludePatterns, source);
+    }
+
+    return zipFiles(files, filename, source, destination, { info, verbose, timestamp });
 }
 
-module.exports = {
-    pack,
-    // Exposed for testing. Treat as semi-public — names may change in a major release.
-    _internal: {
-        loadPackageJson,
-        walkAllFiles,
-        resolveFilename
-    }
-};
+// Exposed for unit testing.
+export const _internal = { loadPackageJson, walkAllFiles, resolveFilename, sanitize, applyExcludes };
